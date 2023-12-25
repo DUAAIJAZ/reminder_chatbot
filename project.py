@@ -9,12 +9,18 @@ from tkinter import messagebox
 from twilio.rest import Client
 
 # Set your Twilio account credentials (replace with your actual credentials)
-account_sid = 'your account sid'
-auth_token = 'your auth token'
+account_sid = 'ur auth sid'
+auth_token = 'ur auth token'
 client = Client(account_sid, auth_token)
 
-# Function to send a WhatsApp message using Twilio
 def send_whatsapp_message(to, body):
+    '''
+    Sends a WhatsApp message using Twilio.
+
+    Args:
+        to (str): The recipient's phone number.
+        body (str): The message body.
+    '''
     message = client.messages.create(
         from_='whatsapp:+14155238886',
         body=body,
@@ -22,8 +28,14 @@ def send_whatsapp_message(to, body):
     )
     print("Message sent successfully!")
 
-# Function to set a reminder
 def set_reminder(title_entry, time_entry):
+    '''
+    Sets a reminder based on user input.
+
+    Args:
+        title_entry (tk.Entry): The entry field for the reminder title.
+        time_entry (tk.Entry): The entry field for the reminder time.
+    '''
     title = title_entry.get()
     time_str = time_entry.get()
     if not title or not time_str:
@@ -33,7 +45,6 @@ def set_reminder(title_entry, time_entry):
     time_obj = datetime.strptime(time_str, "%I:%M %p").time()
     current_time = datetime.now().time()
 
-    # Check for valid time and schedule daily reminders
     if current_time < time_obj:
         reminder_time = datetime.combine(datetime.today(), time_obj)
         schedule_daily_reminders(title, reminder_time)
@@ -41,23 +52,29 @@ def set_reminder(title_entry, time_entry):
         reminder_time = datetime.combine(datetime.today() + timedelta(days=1), time_obj)
         schedule_daily_reminders(title, reminder_time)
 
-# Function to schedule daily reminders
 def schedule_daily_reminders(title, reminder_time):
-    while datetime.now().time() < reminder_time.time():
-        time.sleep(30)  # Check for reminder every 30 seconds
+    '''
+    Schedules daily reminders.
 
-    send_whatsapp_message('your no here', f"Reminder: {title}")
-    response = messagebox.askquestion("Task Completion", "Have you completed the task?")
-    if response == 'yes':
-        return
+    Args:
+        title (str): The reminder title.
+        reminder_time (datetime): The reminder time.
+    '''
+    delta_time = (reminder_time - datetime.now()).total_seconds()
+    if delta_time > 0:
+        time.sleep(delta_time)
+        send_whatsapp_message('add yr number', f"Reminder: {title}")
+        response = messagebox.askquestion("Task Completion", "Have you completed the task?")
+        if response == 'yes':
+            return
 
-# Main function
 def main():
-    # Create Tkinter window
+    '''
+    Creates the main Tkinter window and sets up the reminder app.
+    '''
     root = tk.Tk()
     root.title("Reminder App")
 
-    # Create and place widgets in the window
     title_label = tk.Label(root, text="Enter the title of the reminder:")
     title_label.pack()
 
@@ -76,19 +93,19 @@ def main():
     exit_button = tk.Button(root, text="Exit", command=root.destroy)
     exit_button.pack()
 
-    # Run Tkinter main loop
     root.mainloop()
 
-# Unit Test Class
 class TestReminderApp(unittest.TestCase):
     def test_set_reminder(self):
+        '''
+        Tests the set_reminder function with empty user input.
+        '''
         with patch("builtins.input", side_effect=["Test Title", ""]):
             root = tk.Tk()
             title_entry = tk.Entry(root)
             time_entry = tk.Entry(root)
             time_entry.insert(0, "")
             
-            # Add an assertion to check if messagebox.showerror is called
             with patch.object(messagebox, 'showerror') as mock_showerror:
                 set_reminder(title_entry, time_entry)
                 mock_showerror.assert_called_once_with("Error", "Please enter both title and time.")
