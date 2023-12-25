@@ -9,8 +9,8 @@ from tkinter import messagebox
 from twilio.rest import Client
 
 # Set your Twilio account credentials (replace with your actual credentials)
-account_sid = 'AC1d0795857f033d1afb36a36f75108b23'
-auth_token = '2e2d5c0ec42725704ece7747b8603adc'
+account_sid = 'your account sid'
+auth_token = 'your auth token'
 client = Client(account_sid, auth_token)
 
 # Function to send a WhatsApp message using Twilio
@@ -46,7 +46,7 @@ def schedule_daily_reminders(title, reminder_time):
     while datetime.now().time() < reminder_time.time():
         time.sleep(30)  # Check for reminder every 30 seconds
 
-    send_whatsapp_message('+923201240820', f"Reminder: {title}")
+    send_whatsapp_message('your no here', f"Reminder: {title}")
     response = messagebox.askquestion("Task Completion", "Have you completed the task?")
     if response == 'yes':
         return
@@ -82,12 +82,16 @@ def main():
 # Unit Test Class
 class TestReminderApp(unittest.TestCase):
     def test_set_reminder(self):
-        with patch("builtins.input", side_effect=["Test Title", "12:00 PM"]):
+        with patch("builtins.input", side_effect=["Test Title", ""]):
             root = tk.Tk()
             title_entry = tk.Entry(root)
             time_entry = tk.Entry(root)
-            time_entry.insert(0, "12:00 PM")
-            set_reminder(title_entry, time_entry)
+            time_entry.insert(0, "")
+            
+            # Add an assertion to check if messagebox.showerror is called
+            with patch.object(messagebox, 'showerror') as mock_showerror:
+                set_reminder(title_entry, time_entry)
+                mock_showerror.assert_called_once_with("Error", "Please enter both title and time.")
 
 if __name__ == "__main__":
     profiler = cProfile.Profile()
@@ -97,3 +101,4 @@ if __name__ == "__main__":
 
     stats = pstats.Stats(profiler).sort_stats('cumulative')
     stats.print_stats()
+
