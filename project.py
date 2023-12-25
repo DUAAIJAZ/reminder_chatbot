@@ -1,10 +1,12 @@
 import cProfile
 import pstats
-from datetime import datetime, timedelta, time
+import unittest
+from unittest.mock import patch
+from datetime import datetime, timedelta
 import time
 import tkinter as tk
 from tkinter import messagebox
-from twilio.rest import Client  # Imported Client from twilio.rest
+from twilio.rest import Client
 
 # Set your Twilio account credentials (replace with your actual credentials)
 account_sid = 'AC1d0795857f033d1afb36a36f75108b23'
@@ -23,9 +25,13 @@ def send_whatsapp_message(to, body):
 # Function to set a reminder
 def set_reminder(title_entry, time_entry):
     title = title_entry.get()
-    time_str = time_entry.get()  # Access both entries through arguments
-    time_obj = datetime.strptime(time_str, "%I:%M %p").time()  # Extract time component
-    current_time = datetime.now().time()  # Get current time
+    time_str = time_entry.get()
+    if not title or not time_str:
+        messagebox.showerror("Error", "Please enter both title and time.")
+        return
+
+    time_obj = datetime.strptime(time_str, "%I:%M %p").time()
+    current_time = datetime.now().time()
 
     # Check for valid time and schedule daily reminders
     if current_time < time_obj:
@@ -37,18 +43,13 @@ def set_reminder(title_entry, time_entry):
 
 # Function to schedule daily reminders
 def schedule_daily_reminders(title, reminder_time):
-    while True:
-        current_time = datetime.now().time()
-        if current_time >= reminder_time.time():
-            send_whatsapp_message('+923201240820', f"Reminder: {title}")
-            response = messagebox.askquestion("Task Completion", "Have you completed the task?")
-            if response == 'yes':
-                break
-
+    while datetime.now().time() < reminder_time.time():
         time.sleep(30)  # Check for reminder every 30 seconds
 
-        # Calculate next reminder time for the following day
-        reminder_time += timedelta(days=1)
+    send_whatsapp_message('+923201240820', f"Reminder: {title}")
+    response = messagebox.askquestion("Task Completion", "Have you completed the task?")
+    if response == 'yes':
+        return
 
 # Main function
 def main():
@@ -77,6 +78,16 @@ def main():
 
     # Run Tkinter main loop
     root.mainloop()
+
+# Unit Test Class
+class TestReminderApp(unittest.TestCase):
+    def test_set_reminder(self):
+        with patch("builtins.input", side_effect=["Test Title", "12:00 PM"]):
+            root = tk.Tk()
+            title_entry = tk.Entry(root)
+            time_entry = tk.Entry(root)
+            time_entry.insert(0, "12:00 PM")
+            set_reminder(title_entry, time_entry)
 
 if __name__ == "__main__":
     profiler = cProfile.Profile()
